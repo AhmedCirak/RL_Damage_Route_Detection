@@ -81,8 +81,6 @@ test the agent on different maps.
 
 ## Results
 
-_Add `metrike_v2.png` and/or `rezultati_v2.png` here after training, and
-optionally a GIF/screenshot of the agent navigating the grid._
 
 ## Tech stack
 
