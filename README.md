@@ -1,70 +1,89 @@
-# Road Inspection RL — Q-Learning
+# Road Damage and route detection
 
-Agent koji uči da pronađe najkraći put kroz mrežu ceste (10×10 grid), pri čemu
-usput treba proći kroz što više oštećenih dionica (manje i veće štete) prije
-nego stigne do cilja. Riješeno klasičnim **Q-Learningom** (bez neuronskih mreža),
-uz interaktivnu vizualizaciju u Tkinteru.
+An agent that learns to find the shortest path through a road grid (10×10),
+while trying to pass through as many damaged road segments (minor and major)
+as possible before reaching the goal. Solved with classic **Q-Learning** (no
+neural networks), with an interactive Tkinter visualization.
 
-## Kako radi
+## How it works
 
-- **Grid 10×10** — svaka ćelija je jednog od pet tipova:
-  - `FREE` — slobodna cesta (kazna -0.05 po koraku)
-  - `ROAD_CLOSED` — neprohodna dionica (kazna -1.0, epizoda završava)
-  - `MINOR_DAMAGE` — manje oštećenje (kazna -0.3, +0.2 bonus ako se prvi put otkrije)
-  - `MAJOR_DAMAGE` — veće oštećenje (kazna -0.7, +0.5 bonus ako se prvi put otkrije)
-  - `GOAL` — cilj, donji desni ugao (nagrada +100, epizoda završava)
-- Agent bira akciju **ε-greedy** politikom (gore/dolje/desno/lijevo) i uči
-  Bellmanovom jednačinom: `Q(s,a) ← Q(s,a) + α·[r + γ·max Q(s',a') − Q(s,a)]`
-- Epsilon se eksponencijalno smanjuje kroz epizode (više istraživanja na
-  početku, više eksploatacije na kraju treninga)
+- **10×10 grid** — each cell is one of five types:
+  - `FREE` — open road (-0.05 penalty per step)
+  - `ROAD_CLOSED` — impassable segment (-1.0 penalty, episode ends)
+  - `MINOR_DAMAGE` — minor damage (-0.3 penalty, +0.2 bonus if discovered for the first time)
+  - `MAJOR_DAMAGE` — major damage (-0.7 penalty, +0.5 bonus if discovered for the first time)
+  - `GOAL` — target cell, bottom-right corner (+100 reward, episode ends)
+- The agent picks actions (up/down/right/left) using an **ε-greedy** policy
+  and learns via the Bellman equation:
+  `Q(s,a) ← Q(s,a) + α·[r + γ·max Q(s',a') − Q(s,a)]`
+- Epsilon decays exponentially over episodes (more exploration early on,
+  more exploitation later in training)
 
-## Struktura projekta
+## Project structure
 
 ```
-env_v2.py             # Tkinter environment — grid, render, logika koraka i reward-a
-agent_brain.py         # QLearningAgent — Q-tabela, ε-greedy, Bellman update
-run_agent_v2.py        # Glavna trening petlja + ispis metrika + grafovi
-plot_metrics_text.py   # Generiše PNG sa tekstualnim pregledom metrika
+env_v2.py             # Tkinter environment — grid, rendering, step/reward logic
+agent_brain.py         # QLearningAgent — Q-table, epsilon-greedy, Bellman update
+run_agent_v2.py        # Main training loop + metrics printout + plots
+plot_metrics_text.py   # Generates a PNG with a text overview of the metrics
 requirements.txt
 ```
 
-> Napomena: `run_agent_v2.py` i `plot_metrics_text.py` importuju module po imenu
-> (`env_v2`, `agent_brain`), pa fajlovi u repou moraju biti tačno tako nazvani.
+> Note: `run_agent_v2.py` and `plot_metrics_text.py` import modules by name
+> (`env_v2`, `agent_brain`), so the files must keep these exact names.
 
-## Pokretanje
+## Running it
 
 ```bash
 pip install -r requirements.txt
 python run_agent_v2.py
 ```
 
-Trening se odvija u Tkinter prozoru (agent se vidi kako se kreće po mreži).
-Nakon treninga (podrazumijevano 800 epizoda) program:
+Training runs inside a Tkinter window (you can watch the agent move across
+the grid). After training (800 episodes by default) the script:
 
-- ispisuje detaljne metrike u konzoli (uspješnost, TD greška, konvergencija...)
-- čuva naučenu Q-tabelu u `q_table.npy`
-- generiše `metrike_v2.png` — pregledna tabela sa svim ključnim brojkama
-- generiše `rezultati_v2.png` — 6 grafova (koraci po epizodi, nagrada, TD
-  greška, epsilon decay, stopa uspjeha, pronađena oštećenja)
-- otvara poseban prozor sa vizualizacijom pronađene najkraće rute
+- prints detailed metrics to the console (success rate, TD error, convergence...)
+- saves the learned Q-table to `q_table.npy`
+- generates `metrike_v2.png` — an overview panel with all key numbers
+- generates `rezultati_v2.png` — 6 plots (steps per episode, reward, TD error,
+  epsilon decay, success rate, damage found)
+- opens a separate window visualizing the shortest route found
 
-## Konfiguracija
+## Configuration
 
-Parametri treninga se podešavaju u `CONFIG` rječniku na vrhu `run_agent_v2.py`:
+All training parameters are adjustable — just edit the `CONFIG` dictionary
+at the top of `run_agent_v2.py`:
 
-| Parametar        | Podrazumijevano | Opis                                  |
-|-------------------|-----------------|----------------------------------------|
-| `n_episodes`      | 800             | broj epizoda treninga                 |
-| `max_steps`       | 300             | maks. koraka po epizodi                |
-| `learning_rate`   | 0.9             | α — brzina učenja                     |
-| `gamma`           | 0.9             | γ — faktor popusta budućih nagrada    |
-| `epsilon_decay`   | 0.995           | brzina opadanja istraživanja           |
+```python
+CONFIG = {
+    'n_episodes'    : 800,     # number of training episodes
+    'max_steps'     : 300,     # max steps per episode
+    'learning_rate' : 0.9,     # alpha — learning rate
+    'gamma'         : 0.9,     # gamma — discount factor for future rewards
+    'epsilon'       : 1.0,     # initial exploration rate
+    'epsilon_min'   : 0.01,    # minimum exploration rate
+    'epsilon_decay' : 0.995,   # how fast epsilon decays per episode
+    'render_speed'  : 0.0,     # delay between rendered steps
+    'render_every'  : 100,     # render every Nth episode
+}
+```
 
-## Rezultati
+| Parameter        | Default | Description                            |
+|-------------------|---------|------------------------------------------|
+| `n_episodes`      | 800     | number of training episodes             |
+| `max_steps`       | 300     | max steps per episode                   |
+| `learning_rate`   | 0.9     | α — learning rate                       |
+| `gamma`           | 0.9     | γ — discount factor for future rewards  |
+| `epsilon_decay`   | 0.995   | how fast exploration decays             |
 
-_Ovdje dodati `metrike_v2.png` i/ili `rezultati_v2.png` nakon treninga, kao i
-opciono GIF/screenshot agenta dok se kreće kroz grid._
+The grid layout itself (`GRID_MAP` in `env_v2.py`) can also be edited to
+test the agent on different maps.
 
-## Tehnologije
+## Results
+
+_Add `metrike_v2.png` and/or `rezultati_v2.png` here after training, and
+optionally a GIF/screenshot of the agent navigating the grid._
+
+## Tech stack
 
 Python, NumPy, Pandas, Matplotlib, Tkinter
