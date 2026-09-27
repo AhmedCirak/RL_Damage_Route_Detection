@@ -80,6 +80,13 @@ The grid layout itself (`GRID_MAP` in `env_v2.py`) can also be edited to
 test the agent on different maps.
 
 ## Results
+## Results
+
+![Agent grid and legend](results/1.1.png)
+![Training metrics overview](results/1.2.png)
+![Training plots](results/1.3.png)
+![Optimal route visualization](results/1.4.png)
+
 
 
 ## Tech stack
